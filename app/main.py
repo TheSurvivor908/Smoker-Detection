@@ -4,16 +4,17 @@ import pandas as pd
 from joblib import load
 from pathlib import Path
 
-app = FastAPI(title="Smoker Status Detection API")
+app = FastAPI(title="Main API")
 
 # ── 1. Load trained models ──────────────────────────────────────────────────────
-BASE_DIR = Path("C:/Users/ASUS/Dataset atau Handson/Project 4/Project 4 main model/app")
+BASE_DIR = Path(__file__).resolve().parent
 
 model_path_catboost = BASE_DIR / "project4_CatBoost_86.joblib"
-model_path_xgboost = BASE_DIR / "project4_XGBOOST_87.joblib"
+model_path_xgboost = BASE_DIR / "project4_XGBOOST_87.joblib"  # Make sure filename matches
 
 model_catboost = load(model_path_catboost)
 model_xgboost = load(model_path_xgboost)
+
 # ── 2. Input schema ─────────────────────────────────────────────────────────────
 class InputData(BaseModel):
     hdl:                     float
@@ -64,27 +65,18 @@ RENAME_TO_MODEL = {
 # ── 4. Prediction endpoint ──────────────────────────────────────────────────────
 @app.post("/predict")
 def predict(data: InputData, model_choice: str = Query("catboost", enum=["catboost", "xgboost"])):
-    # Step 1: Convert input to DataFrame
     df = pd.DataFrame([data.dict()])
-
-    # Step 2: Rename to match model schema
     df.rename(columns=RENAME_TO_MODEL, inplace=True)
 
-    # Step 3: Select model
     selected_model = model_catboost if model_choice == "catboost" else model_xgboost
 
-    # Step 4: Validate feature names
     expected_features = selected_model.feature_names_
     missing = set(expected_features) - set(df.columns)
     if missing:
-        return {
-            "error": f"Missing features: {missing}"
-        }
+        return {"error": f"Missing features: {missing}"}
 
-    # Step 5: Ensure correct order
     df = df[expected_features]
 
-    # Step 6: Predict
     class_hat = selected_model.predict(df)
     proba_hat = selected_model.predict_proba(df)[:, 1]
 
