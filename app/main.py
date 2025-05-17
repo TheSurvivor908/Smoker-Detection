@@ -1,14 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from pydantic import BaseModel
 import pandas as pd
 from joblib import load
+from pathlib import Path
 
 app = FastAPI(title="Smoker Status Detection API")
 
-# ── 1. Load trained model ───────────────────────────────────────────────────────
-model = load("C:/Users/ASUS/Dataset atau Handson/Project 4/Project 4 main model/app/project4_CatBoost_86.joblib")
-        
-# ── 2. Input schema with Python‑safe identifiers ────────────────────────────────
+# ── 1. Load trained models ──────────────────────────────────────────────────────
+BASE_DIR = Path("C:/Users/ASUS/Dataset atau Handson/Project 4/Project 4 main model/app")
+
+model_path_catboost = BASE_DIR / "project4_CatBoost_86.joblib"
+model_path_xgboost = BASE_DIR / "project4_XGBOOST_87.joblib"
+
+model_catboost = load(model_path_catboost)
+model_xgboost = load(model_path_xgboost)
+# ── 2. Input schema ─────────────────────────────────────────────────────────────
 class InputData(BaseModel):
     hdl:                     float
     ldl:                     float
@@ -31,7 +37,7 @@ class InputData(BaseModel):
     height_cm:               float
     weight_kg:               float
 
-# ── 3. Mapping dict: API field  ➜  model's original column name ────────────────
+# ── 3. Mapping to model feature names ───────────────────────────────────────────
 RENAME_TO_MODEL = {
     "hdl":                   "HDL",
     "ldl":                   "LDL",
@@ -44,8 +50,8 @@ RENAME_TO_MODEL = {
     "hemoglobin":            "hemoglobin",
     "urine_protein":         "Urine protein",
     "waist_cm":              "waist(cm)",
-    "combined_hearing":      "hearing_combined",      # ← adjust if different
-    "combined_vision":       "vision_combined",       # ← adjust if different
+    "combined_hearing":      "hearing_combined",
+    "combined_vision":       "vision_combined",
     "systolic":              "systolic",
     "cholesterol":           "Cholesterol",
     "triglyceride":          "triglyceride",
@@ -57,21 +63,33 @@ RENAME_TO_MODEL = {
 
 # ── 4. Prediction endpoint ──────────────────────────────────────────────────────
 @app.post("/predict")
-def predict(data: InputData):
-    # Convert pydantic → DataFrame
+def predict(data: InputData, model_choice: str = Query("catboost", enum=["catboost", "xgboost"])):
+    # Step 1: Convert input to DataFrame
     df = pd.DataFrame([data.dict()])
 
-    # Rename columns to match the model’s training schema
+    # Step 2: Rename to match model schema
     df.rename(columns=RENAME_TO_MODEL, inplace=True)
 
-    # Ensure column order equals model.feature_names_
-    df = df[model.feature_names_]
+    # Step 3: Select model
+    selected_model = model_catboost if model_choice == "catboost" else model_xgboost
 
-    # Predict
-    class_hat   = model.predict(df)
-    proba_hat   = model.predict_proba(df)[:, 1]  # probability of positive class
+    # Step 4: Validate feature names
+    expected_features = selected_model.feature_names_
+    missing = set(expected_features) - set(df.columns)
+    if missing:
+        return {
+            "error": f"Missing features: {missing}"
+        }
+
+    # Step 5: Ensure correct order
+    df = df[expected_features]
+
+    # Step 6: Predict
+    class_hat = selected_model.predict(df)
+    proba_hat = selected_model.predict_proba(df)[:, 1]
 
     return {
+        "model_used": model_choice,
         "prediction": int(class_hat[0]),
         "probability": float(proba_hat[0])
     }
