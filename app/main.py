@@ -6,15 +6,19 @@ from joblib import load
 from pathlib import Path
 
 app = FastAPI(
-    title="Health‑Risk Ensemble API",
-    description="Serve predictions with CatBoost or XGBoost model via query switch",
+    title="Main.py",
+    description="Smoker predictions with CatBoost or XGBoost model via query switch",
     version="1.1.0"
 )
 
 # ── 1. Load trained models (RELATIVE paths, so it works on Railway/anywhere) ────
-BASE_DIR = Path(__file__).resolve().parent
-model_catboost = load(BASE_DIR / "project4_CatBoost_86.joblib")
-model_xgboost  = load(BASE_DIR / "project4_XGBOOST_87.joblib")
+
+BASE_DIR = Path(__file__).resolve().parent  # app/
+MODEL_DIR = BASE_DIR / "models"
+
+model_catboost = load(MODEL_DIR / "project4_CatBoost_86.joblib")
+model_xgboost = load(MODEL_DIR / "project4_XGBOOST_87.joblib")
+
 
 # ── 2. Input schema (python‑safe names) ────────────────────────────────────────
 class InputData(BaseModel):
