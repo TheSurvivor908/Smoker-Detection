@@ -84,3 +84,13 @@ def predict(data: InputData, model_choice: str = Query("catboost", enum=["catboo
         "prediction": int(class_hat[0]),
         "probability": float(proba_hat[0])
     }
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+import uvicorn
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  # Railway provides PORT automatically
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
