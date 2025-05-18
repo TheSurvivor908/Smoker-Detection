@@ -3,17 +3,16 @@ from pydantic import BaseModel
 import pandas as pd
 from joblib import load
 from pathlib import Path
-
+import os
 app = FastAPI(title="Smoker Detection API")
 
 # ── 1. Load trained models ──────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent
 
-model_path_catboost = BASE_DIR / "CatBoost_86.joblib"
-model_path_xgboost = BASE_DIR / "xgb_model87.json"  # Make sure filename matches
+# Use Railway's environment variable for base path
+MODEL_DIR = Path(os.getenv("MODEL_DIR", "/app"))  # Default to /app if not set
 
-model_catboost = load(model_path_catboost)
-model_xgboost = load(model_path_xgboost)
+model_path_catboost = MODEL_DIR / "CatBoost_86.joblib"
+model_path_xgboost = MODEL_DIR / "xgb_model87.json"
 
 # ── 2. Input schema ─────────────────────────────────────────────────────────────
 class InputData(BaseModel):
