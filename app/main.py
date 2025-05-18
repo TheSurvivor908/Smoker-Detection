@@ -31,8 +31,8 @@ model_catboost = load(model_path_catboost)
 
 # ── 2. Input schema ─────────────────────────────────────────────────────────────
 class InputData(BaseModel):
-    Hdl: float
-    Ldl: float
+    hdl: float
+    ldl: float
     relaxation: float
     fasting_blood_sugar: float
     ast: float
