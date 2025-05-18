@@ -99,3 +99,12 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))  # Railway provides PORT automatically
     uvicorn.run("main:app", host="0.0.0.0", port=port)
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can change "*" to your frontend domain for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
