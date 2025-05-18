@@ -9,8 +9,8 @@ app = FastAPI(title="Smoker Detection API")
 # ── 1. Load trained models ──────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent
 
-model_path_catboost = BASE_DIR / "project4_CatBoost_86.joblib"
-model_path_xgboost = BASE_DIR / "project4_xgb_model87.json"  # Make sure filename matches
+model_path_catboost = BASE_DIR / "CatBoost_86.joblib"
+model_path_xgboost = BASE_DIR / "xgb_model87.json"  # Make sure filename matches
 
 model_catboost = load(model_path_catboost)
 model_xgboost = load(model_path_xgboost)
