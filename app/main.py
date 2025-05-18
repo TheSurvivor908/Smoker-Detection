@@ -16,8 +16,8 @@ model_path_xgboost = MODEL_DIR / "xgb_model87.json"
 
 # ── 2. Input schema ─────────────────────────────────────────────────────────────
 class InputData(BaseModel):
-    hdl:                     float
-    ldl:                     float
+    Hdl:                     float
+    Ldl:                     float
     relaxation:              float
     fasting_blood_sugar:     float
     ast:                     float
@@ -93,13 +93,6 @@ def read_root():
 def health_check():
     return {"status": "ok"}
 
-import uvicorn
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))  # Railway provides PORT automatically
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
-
-from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
@@ -108,3 +101,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+import uvicorn
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  # Railway provides PORT automatically
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
+
+from fastapi.middleware.cors import CORSMiddleware
+
+
