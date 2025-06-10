@@ -113,9 +113,13 @@ def predict(data: InputData, model_choice: str = Query("catboost", enum=["catboo
         proba_hat = model_catboost.predict_proba(df)[:, 1]
 
     elif model_choice == "xgboost":
-        dmatrix = xgb.DMatrix(df)
-        proba_hat = model_xgboost.predict(dmatrix)
-        class_hat = (proba_hat > 0.5).astype(int)
+        try:
+            dmatrix = xgb.DMatrix(df.values, feature_names=df.columns.tolist())
+            proba_hat = model_xgboost.predict(dmatrix)
+            class_hat = (proba_hat > 0.5).astype(int)
+        except Exception as e:
+            logger.error(f"XGBoost prediction error: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
 
     return {
         "model_used": model_choice,
