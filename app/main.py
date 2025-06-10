@@ -76,8 +76,8 @@ RENAME_TO_MODEL = {
     "hemoglobin": "hemoglobin",
     "urine_protein": "Urine protein",
     "waist_cm": "waist(cm)",
-    "hearing_combined": "combined_hearing",  # Corrected
-    "vision_combined": "combined_vision",    # Corrected
+    "hearing_combined": "combined_hearing", 
+    "vision_combined": "combined_vision",    
     "systolic": "systolic",
     "cholesterol": "Cholesterol",
     "triglyceride": "triglyceride",
@@ -96,27 +96,27 @@ def predict(data: InputData, model_choice: str = Query("catboost", enum=["catboo
     # Apply the mapping to rename columns
     df.rename(columns=RENAME_TO_MODEL, inplace=True)
 
-    # Select the model based on user choice
-    selected_model = model_catboost if model_choice == "catboost" else model_xgboost
+    if model_choice == "catboost":
+        # Reorder columns to match model expectations
+        expected_features = model_catboost.feature_names_
+        missing = set(expected_features) - set(df.columns)
+        if missing:
+            return {"error": f"Missing features: {missing}"}
+        
+        df = df[expected_features]
 
-    # Get expected features from the model
-    expected_features = selected_model.feature_names_
-    print("Received features:", df.columns)
-    print("Expected features:", expected_features)
+        # Predict using CatBoost
+        class_hat = model_catboost.predict(df)
+        proba_hat = model_catboost.predict_proba(df)[:, 1]
 
-    # Check for missing features
-    missing = set(expected_features) - set(df.columns)
-    if missing:
-        return {"error": f"Missing features: {missing}"}
+    elif model_choice == "xgboost":
+        # Ensure feature order for XGBoost if known (you may define a list manually)
+        dmatrix = xgb.DMatrix(df)
 
-    # Reorder DataFrame columns to match expected features
-    df = df[expected_features]
+        # Predict with Booster model
+        proba_hat = model_xgboost.predict(dmatrix)
+        class_hat = (proba_hat > 0.5).astype(int)  # Convert to class label manually
 
-    # Make predictions
-    class_hat = selected_model.predict(df)
-    proba_hat = selected_model.predict_proba(df)[:, 1]
-
-    # Return the prediction result
     return {
         "model_used": model_choice,
         "prediction": int(class_hat[0]),
