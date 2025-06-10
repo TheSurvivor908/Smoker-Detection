@@ -7,6 +7,10 @@ from pathlib import Path
 import os
 import uvicorn
 import xgboost as xgb
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 app = FastAPI(title="Smoker Detection API")
 
@@ -135,4 +139,34 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
 
-print(os.path.exists(MODEL_DIR / "CatBoost_86.joblib"))
+app = FastAPI()
+
+@app.exception_handler(Exception)
+def generic_exception_handler(request: Request, exc: Exception):
+    """
+    Handle generic exceptions that are not caught by more specific handlers.
+    """
+    return JSONResponse(
+        status_code=500,
+        content={"message": "An unexpected error occurred.", "details": str(exc)}
+    )
+
+@app.exception_handler(RequestValidationError)
+def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    Handle validation errors for request data.
+    """
+    return JSONResponse(
+        status_code=422,
+        content={"message": "Validation error", "details": exc.errors()}
+    )
+
+@app.exception_handler(StarletteHTTPException)
+def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """
+    Handle HTTP exceptions (e.g., 404 not found).
+    """
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail}
+    )
