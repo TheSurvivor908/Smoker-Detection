@@ -10,12 +10,13 @@ import xgboost as xgb
 
 app = FastAPI(title="Smoker Detection API")
 
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change "*" to your frontend URL in production
+    allow_origins=["*"],  # Adjust in production to include only specific origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],  # Explicitly allowing methods
+    allow_headers=["*"]  # Explicitly allowing all headers
 )
 
 # ── 1. Load trained models ──────────────────────────────────────────────────────
