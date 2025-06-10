@@ -67,8 +67,8 @@ RENAME_TO_MODEL = {
     "hemoglobin": "hemoglobin",
     "urine_protein": "Urine protein",
     "waist_cm": "waist(cm)",
-    "combined_hearing": "hearing_combined",
-    "combined_vision": "vision_combined",
+    "hearing_combined": "combined_hearing",  # Corrected
+    "vision_combined": "combined_vision",    # Corrected
     "systolic": "systolic",
     "cholesterol": "Cholesterol",
     "triglyceride": "triglyceride",
@@ -81,24 +81,33 @@ RENAME_TO_MODEL = {
 # ── 4. Prediction endpoint ──────────────────────────────────────────────────────
 @app.post("/predict")
 def predict(data: InputData, model_choice: str = Query("catboost", enum=["catboost", "xgboost"])):
+    # Create DataFrame from input data
     df = pd.DataFrame([data.dict()])
+
+    # Apply the mapping to rename columns
     df.rename(columns=RENAME_TO_MODEL, inplace=True)
 
+    # Select the model based on user choice
     selected_model = model_catboost if model_choice == "catboost" else model_xgboost
 
+    # Get expected features from the model
     expected_features = selected_model.feature_names_
     print("Received features:", df.columns)
     print("Expected features:", expected_features)
 
+    # Check for missing features
     missing = set(expected_features) - set(df.columns)
     if missing:
         return {"error": f"Missing features: {missing}"}
 
+    # Reorder DataFrame columns to match expected features
     df = df[expected_features]
 
+    # Make predictions
     class_hat = selected_model.predict(df)
     proba_hat = selected_model.predict_proba(df)[:, 1]
 
+    # Return the prediction result
     return {
         "model_used": model_choice,
         "prediction": int(class_hat[0]),
