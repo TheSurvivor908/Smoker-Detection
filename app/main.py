@@ -20,16 +20,25 @@ app.add_middleware(
 
 # ── 1. Load trained models ──────────────────────────────────────────────────────
 
-MODEL_DIR = Path(os.getenv("MODEL_DIR", "/app"))
+# Set the base directory based on an environment variable
+MODEL_DIR = Path(os.getenv("MODEL_DIR", Path(__file__).resolve().parent))
 
 model_path_catboost = MODEL_DIR / "CatBoost_86.joblib"
 model_path_xgboost = MODEL_DIR / "xgb_model87.json"
 
 # Load models
-model_catboost = load(model_path_catboost)
+try:
+    model_catboost = load(model_path_catboost)
+except Exception as e:
+    logger.error(f"Failed to load CatBoost model: {e}")
+    raise HTTPException(status_code=500, detail="Failed to load CatBoost model")
 
-model_xgboost = xgb.Booster()
-model_xgboost.load_model(model_path_xgboost)
+try:
+    model_xgboost = xgb.Booster()
+    model_xgboost.load_model(model_path_xgboost)
+except Exception as e:
+    logger.error(f"Failed to load XGBoost model: {e}")
+    raise HTTPException(status_code=500, detail="Failed to load XGBoost model")
 
 # ── 2. Input schema ─────────────────────────────────────────────────────────────
 class InputData(BaseModel):
