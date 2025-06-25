@@ -1,11 +1,10 @@
 # Smoker Detection
 ## Overview
-This project aims to check is the person a smoker or non smoker with health dataset
-
+-"This project is designed to accurately determine whether individuals are smokers or non-smokers, utilizing a sophisticated data analysis approach. Additionally, we've developed an interactive website that runs locally with react."
 ## Dataset
 - Data source : Kaggle
 ##  Tools & Technologies Used
-- Environment: Jupyter Notebook
+- Environment: Jupyter Notebook, React
 - Modeling Tools: XGBoost and CatBoost
 ## Data Preprocessing
 - Fill Missing Value(If needed)
@@ -18,7 +17,7 @@ This project aims to check is the person a smoker or non smoker with health data
 ### XGBoost
 - Hyperparameter Tuning: Optimal parameters (max depth, learning rate, sub samble, etc) selected based on Baynessian Opt.
 ### CATBoost
-- Hyperparameter Tuning: Employed Bayesian optimization to fine-tune parameters such as tree depth and number of estimators.
+- Hyperparameter Tuning: Employed Bayesian optimization to fine-tune parameters.
 
 ## Model Evaluation 
 - Evaluation metrics: RoC Auc
